@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 
-def test(request):
-    return HttpResponse("hello world")
+from .models import Movie
+
+def home(request):
+    return render(request, "main/home.html", {"movies_total": Movie.objects.count()})
