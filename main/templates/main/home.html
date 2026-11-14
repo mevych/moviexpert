@@ -3,5 +3,24 @@
 <section class="hero">
   <h1>Записывайте, что смотрите, и что хотите посмотреть</h1>
   <p>Отмечайте фильмы, ставьте оценки, пишите обзоры и собирайте списки: избранное, «смотреть позже» и просмотренное.</p>
+  <div class="row">
+    <a class="btn" href="{% url 'movie_list' %}">Открыть каталог ({{ movies_total }})</a>
+  </div>
+</section>
+
+{% if top %}
+<section>
+  <h2>Лучшие по оценкам</h2>
+  <div class="grid">{% for movie in top %}{% include 'main/_movie_card.html' %}{% endfor %}</div>
+</section>
+{% endif %}
+
+<section>
+  <h2>Недавно добавлено</h2>
+  {% if latest %}
+    <div class="grid">{% for movie in latest %}{% include 'main/_movie_card.html' %}{% endfor %}</div>
+  {% else %}
+    <p class="empty">В каталоге пока нет фильмов.</p>
+  {% endif %}
 </section>
 {% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ movie.title }} — Moviexpert{% endblock %}
+{% block content %}
+<article class="detail">
+  <div class="detail-poster">{% include 'main/_poster.html' %}</div>
+
+  <div class="detail-info">
+    <h1>{{ movie.title }}</h1>
+    <p class="muted">
+      {% if movie.original_title %}{{ movie.original_title }}, {% endif %}{{ movie.year }}
+      {% if movie.director %}, реж. {{ movie.director }}{% endif %}
+      {% if movie.duration %}, {{ movie.duration }} мин{% endif %}
+    </p>
+    {% if movie.genres.all %}
+      <p class="tags">{% for g in movie.genres.all %}<a class="tag" href="{% url 'movie_list' %}?genre={{ g.pk }}">{{ g.name }}</a>{% endfor %}</p>
+    {% endif %}
+
+    <p class="rating-line">
+      {% if movie.avg_rating %}
+        <span class="big-score">{{ movie.avg_rating|floatformat:1 }}</span>
+        <span class="muted">из 10, оценок: {{ movie.reviews_count }}</span>
+      {% else %}
+        <span class="muted">Оценок пока нет</span>
+      {% endif %}
+    </p>
+
+    {% if movie.description %}<p class="description">{{ movie.description|linebreaksbr }}</p>{% endif %}
+  </div>
+</article>
+{% endblock %}
