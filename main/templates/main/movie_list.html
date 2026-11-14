@@ -1,0 +1,37 @@
+{% extends 'main/base.html' %}
+{% block title %}Каталог — Moviexpert{% endblock %}
+{% block content %}
+<h1>Каталог</h1>
+
+<form class="filters" method="get">
+  <label>Поиск
+    <input type="search" name="q" value="{{ q }}" placeholder="Название или режиссёр">
+  </label>
+  <label>Жанр
+    <select name="genre">
+      <option value="">Все жанры</option>
+      {% for g in genres %}
+        <option value="{{ g.pk }}" {% if g.pk|stringformat:"s" == genre_id %}selected{% endif %}>{{ g.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Сортировка
+    <select name="sort">
+      <option value="new" {% if sort == 'new' %}selected{% endif %}>Сначала новые в каталоге</option>
+      <option value="year" {% if sort == 'year' %}selected{% endif %}>По году выхода</option>
+      <option value="rating" {% if sort == 'rating' %}selected{% endif %}>По рейтингу</option>
+      <option value="title" {% if sort == 'title' %}selected{% endif %}>По алфавиту</option>
+    </select>
+  </label>
+  <input type="hidden" name="dir" value="{{ direction }}">
+  <button class="btn" type="submit">Применить</button>
+  <button class="btn ghost" type="submit" name="dir" value="{% if direction == 'desc' %}asc{% else %}desc{% endif %}" title="Сменить направление сортировки">{% if direction == 'desc' %}↓ По убыванию{% else %}↑ По возрастанию{% endif %}</button>
+</form>
+
+{% if page.object_list %}
+  <div class="grid">{% for movie in page %}{% include 'main/_movie_card.html' %}{% endfor %}</div>
+  {% include 'main/_pagination.html' %}
+{% else %}
+  <p class="empty">Ничего не найдено. Попробуйте изменить запрос или <a href="{% url 'movie_list' %}">сбросить фильтры</a>.</p>
+{% endif %}
+{% endblock %}

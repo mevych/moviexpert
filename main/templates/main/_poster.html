@@ -1,0 +1,8 @@
+<div class="poster" style="--h: {{ movie.hue }}">
+  {% if movie.poster_src %}
+    <img src="{{ movie.poster_src }}" alt="Постер: {{ movie.title }}" loading="lazy">
+  {% else %}
+    <span class="poster-title">{{ movie.title }}</span>
+    <span class="poster-year">{{ movie.year }}</span>
+  {% endif %}
+</div>

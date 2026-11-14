@@ -1,0 +1,10 @@
+<a class="card" href="{% url 'movie_detail' movie.pk %}">
+  {% include 'main/_poster.html' %}
+  <div class="card-body">
+    <h3>{{ movie.title }}</h3>
+    <p class="muted">{{ movie.year }}{% if movie.director %}, {{ movie.director }}{% endif %}</p>
+    <p class="scores">
+      {% if movie.avg_rating %}<span class="score">{{ movie.avg_rating|floatformat:1 }}</span>{% endif %}
+    </p>
+  </div>
+</a>
