@@ -1,7 +1,10 @@
+from django.contrib import messages
+from django.contrib.auth import login
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
+from .forms import RegisterForm
 from .models import Genre, Movie
 
 SORT_FIELDS = {
@@ -87,3 +90,15 @@ def movie_list(request):
 def movie_detail(request, pk):
     movie = get_object_or_404(catalog(), pk=pk)
     return render(request, "main/movie_detail.html", {"movie": movie})
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+    form = RegisterForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user)
+        messages.success(request, "Аккаунт создан. Добро пожаловать!")
+        return redirect("home")
+    return render(request, "registration/register.html", {"form": form})

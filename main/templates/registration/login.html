@@ -1,0 +1,14 @@
+{% extends 'main/base.html' %}
+{% block title %}Вход — Moviexpert{% endblock %}
+{% block content %}
+<h1>Вход</h1>
+<form method="post" class="form narrow">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+  {% endfor %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn" type="submit">Войти</button>
+</form>
+<p class="muted">Нет аккаунта? <a href="{% url 'register' %}">Зарегистрируйтесь</a>.</p>
+{% endblock %}
