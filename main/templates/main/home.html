@@ -5,6 +5,7 @@
   <p>Отмечайте фильмы, ставьте оценки, пишите обзоры и собирайте списки: избранное, «смотреть позже» и просмотренное.</p>
   <div class="row">
     <a class="btn" href="{% url 'movie_list' %}">Открыть каталог ({{ movies_total }})</a>
+    {% if not user.is_authenticated %}<a class="btn ghost" href="{% url 'register' %}">Создать аккаунт</a>{% endif %}
   </div>
 </section>
 

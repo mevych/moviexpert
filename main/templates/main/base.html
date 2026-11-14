@@ -17,6 +17,16 @@
       <input type="search" name="q" placeholder="Название или режиссёр" value="{{ request.GET.q }}" aria-label="Поиск фильмов">
       <button type="submit" class="btn small">Найти</button>
     </form>
+    <div class="auth">
+      {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+          <button type="submit" class="btn ghost small">Выйти ({{ user.username }})</button>
+        </form>
+      {% else %}
+        <a class="btn ghost small" href="{% url 'login' %}">Войти</a>
+        <a class="btn small" href="{% url 'register' %}">Регистрация</a>
+      {% endif %}
+    </div>
   </div>
 </header>
 
