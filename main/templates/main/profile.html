@@ -18,6 +18,19 @@
       <p class="empty">Обзоров пока нет.</p>
     {% endfor %}
   </div>
+{% elif tab == 'lists' %}
+  {% if is_self %}<p><a class="btn small" href="{% url 'list_create' %}">Создать список</a></p>{% endif %}
+  <div class="list-rows">
+    {% for l in lists %}
+      <a class="list-row" href="{{ l.get_absolute_url }}">
+        <h3>{{ l.title }}{% if not l.is_public %} <small class="muted">(личный)</small>{% endif %}</h3>
+        <p class="muted">Фильмов: {{ l.items_count }}</p>
+        {% if l.description %}<p>{{ l.description|truncatewords:25 }}</p>{% endif %}
+      </a>
+    {% empty %}
+      <p class="empty">Списков пока нет.</p>
+    {% endfor %}
+  </div>
 {% else %}
   {% if movies %}
     <div class="grid">{% for movie in movies %}{% include 'main/_movie_card.html' %}{% endfor %}</div>

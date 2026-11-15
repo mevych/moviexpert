@@ -2,7 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Comment, Movie, Review
+from .models import Comment, Movie, MovieList, Review
+
 
 class ReviewForm(forms.ModelForm):
     rating = forms.TypedChoiceField(
@@ -64,6 +65,13 @@ class MovieForm(forms.ModelForm):
         if poster and hasattr(poster, "size") and poster.size > 5 * 1024 * 1024:
             raise forms.ValidationError("Файл больше 5 МБ.")
         return poster
+
+
+class MovieListForm(forms.ModelForm):
+    class Meta:
+        model = MovieList
+        fields = ["title", "description", "is_public"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
 
 
 class RegisterForm(UserCreationForm):

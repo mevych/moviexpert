@@ -1,0 +1,22 @@
+{% extends 'main/base.html' %}
+{% block title %}Списки — Moviexpert{% endblock %}
+{% block content %}
+<h1>Списки фильмов</h1>
+<p class="muted">Подборки, которые собрали пользователи.</p>
+{% if user.is_authenticated %}<p><a class="btn" href="{% url 'list_create' %}">Создать список</a></p>{% endif %}
+
+{% if page.object_list %}
+  <div class="list-rows">
+    {% for l in page %}
+      <a class="list-row" href="{{ l.get_absolute_url }}">
+        <h3>{{ l.title }}</h3>
+        <p class="muted">{{ l.user.username }}, фильмов: {{ l.items_count }}</p>
+        {% if l.description %}<p>{{ l.description|truncatewords:25 }}</p>{% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  {% include 'main/_pagination.html' %}
+{% else %}
+  <p class="empty">Публичных списков пока нет.</p>
+{% endif %}
+{% endblock %}

@@ -9,8 +9,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import CommentForm, MovieForm, RegisterForm, ReviewForm
-from .models import Comment, Genre, Movie, Review, ReviewLike, UserMovie
+from .forms import (
+    CommentForm, MovieForm, MovieListForm, RegisterForm, ReviewForm,
+)
+from .models import (
+    Comment, Genre, Movie, MovieList, MovieListItem, Review, ReviewLike,
+    UserMovie,
+)
 
 User = get_user_model()
 
@@ -39,6 +44,7 @@ PROFILE_TABS = {
     "watchlist": ("Смотреть позже", "in_watchlist"),
     "watched": ("Просмотрено", "is_watched"),
     "reviews": ("Обзоры", None),
+    "lists": ("Списки", None),
 }
 
 
@@ -141,9 +147,11 @@ def movie_list(request):
 
 def _detail_context(request, movie, form=None):
     state = my_review = None
+    addable_lists = []
     if request.user.is_authenticated:
         state = UserMovie.objects.filter(user=request.user, movie=movie).first()
         my_review = Review.objects.filter(user=request.user, movie=movie).first()
+        addable_lists = request.user.lists.exclude(items__movie=movie)
     if form is None:
         form = ReviewForm(instance=my_review)
     reviews = list(reviews_qs().filter(movie=movie))
@@ -154,6 +162,8 @@ def _detail_context(request, movie, form=None):
         "form": form,
         "reviews": reviews,
         "liked": liked_ids(request.user, reviews),
+        "addable_lists": addable_lists,
+        "public_lists": movie.in_lists.filter(is_public=True).select_related("user")[:6],
     }
 
 
@@ -269,6 +279,86 @@ def comment_delete(request, pk):
     return redirect(review)
 
 
+def list_index(request):
+    lists = (MovieList.objects.filter(is_public=True)
+             .select_related("user").annotate(items_count=Count("items")))
+    page = Paginator(lists, 20).get_page(request.GET.get("page"))
+    return render(request, "main/list_index.html", {"page": page, "querystring": ""})
+
+
+def list_detail(request, pk):
+    movie_list = get_object_or_404(MovieList.objects.select_related("user"), pk=pk)
+    is_owner = request.user.is_authenticated and movie_list.user_id == request.user.pk
+    if not movie_list.is_public and not is_owner:
+        raise Http404
+    ids = list(movie_list.items.values_list("movie_id", flat=True))
+    by_id = {m.pk: m for m in catalog().filter(pk__in=ids)}
+    return render(request, "main/list_detail.html", {
+        "movie_list": movie_list,
+        "is_owner": is_owner,
+        "movies": [by_id[i] for i in ids if i in by_id],
+    })
+
+
+@login_required
+def list_create(request):
+    form = MovieListForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        movie_list = form.save(commit=False)
+        movie_list.user = request.user
+        movie_list.save()
+        messages.success(request, "Список создан.")
+        return redirect(movie_list)
+    return render(request, "main/list_form.html", {"form": form, "heading": "Новый список"})
+
+
+@login_required
+def list_edit(request, pk):
+    movie_list = get_object_or_404(MovieList, pk=pk, user=request.user)
+    form = MovieListForm(request.POST or None, instance=movie_list)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Изменения сохранены.")
+        return redirect(movie_list)
+    return render(request, "main/list_form.html", {"form": form, "heading": "Изменить список"})
+
+
+@login_required
+@require_POST
+def list_delete(request, pk):
+    movie_list = get_object_or_404(MovieList, pk=pk, user=request.user)
+    movie_list.delete()
+    messages.success(request, "Список удалён.")
+    return redirect("profile", username=request.user.username)
+
+
+@login_required
+@require_POST
+def list_add_movie(request, pk):
+    movie = get_object_or_404(Movie, pk=pk)
+    list_id = request.POST.get("list_id", "")
+    if not list_id.isdigit():
+        messages.error(request, "Выберите список.")
+        return redirect(movie)
+    movie_list = get_object_or_404(MovieList, pk=int(list_id), user=request.user)
+    _, created = MovieListItem.objects.get_or_create(movie_list=movie_list, movie=movie)
+    if created:
+        movie_list.save()
+        messages.success(request, f"Фильм добавлен в список «{movie_list.title}».")
+    else:
+        messages.error(request, "Фильм уже есть в этом списке.")
+    return redirect(movie)
+
+
+@login_required
+@require_POST
+def list_remove_movie(request, pk, movie_pk):
+    movie_list = get_object_or_404(MovieList, pk=pk, user=request.user)
+    MovieListItem.objects.filter(movie_list=movie_list, movie_id=movie_pk).delete()
+    messages.success(request, "Фильм убран из списка.")
+    return redirect(movie_list)
+
+
 def profile(request, username):
     owner = get_object_or_404(User, username=username)
     is_self = request.user.is_authenticated and request.user.pk == owner.pk
@@ -276,14 +366,20 @@ def profile(request, username):
     if tab not in PROFILE_TABS:
         tab = "favorites"
 
+    owner_lists = MovieList.objects.filter(user=owner)
+    if not is_self:
+        owner_lists = owner_lists.filter(is_public=True)
+
     counts = {}
     for key, (_, field) in PROFILE_TABS.items():
         if field:
             counts[key] = UserMovie.objects.filter(user=owner, **{field: True}).count()
-        else:
+        elif key == "reviews":
             counts[key] = Review.objects.filter(user=owner).count()
+        else:
+            counts[key] = owner_lists.count()
 
-    movies = reviews = None
+    movies = reviews = lists = None
     liked = set()
     field = PROFILE_TABS[tab][1]
     if field:
@@ -293,9 +389,11 @@ def profile(request, username):
         )
         by_id = {m.pk: m for m in catalog().filter(pk__in=ids)}
         movies = [by_id[i] for i in ids if i in by_id]
-    else:
+    elif tab == "reviews":
         reviews = list(reviews_qs().filter(user=owner))
         liked = liked_ids(request.user, reviews)
+    else:
+        lists = owner_lists.annotate(items_count=Count("items"))
 
     return render(request, "main/profile.html", {
         "owner": owner,
@@ -304,6 +402,7 @@ def profile(request, username):
         "tabs": [(key, label, counts[key]) for key, (label, _) in PROFILE_TABS.items()],
         "movies": movies,
         "reviews": reviews,
+        "lists": lists,
         "liked": liked,
     })
 

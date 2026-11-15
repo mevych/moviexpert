@@ -1,0 +1,19 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ heading }} — Moviexpert{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+<form method="post" class="form">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <div class="field {% if field.field.widget.input_type == 'checkbox' %}check{% endif %}">
+      {% if field.field.widget.input_type == 'checkbox' %}
+        <label>{{ field }} {{ field.label }}</label>
+      {% else %}
+        {{ field.label_tag }}{{ field }}
+      {% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <button class="btn" type="submit">Сохранить</button>
+</form>
+{% endblock %}

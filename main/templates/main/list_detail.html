@@ -1,0 +1,37 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ movie_list.title }} — Moviexpert{% endblock %}
+{% block content %}
+<h1>{{ movie_list.title }}</h1>
+<p class="muted">
+  Автор: <a href="{% url 'profile' movie_list.user.username %}">{{ movie_list.user.username }}</a>
+  {% if not movie_list.is_public %}, виден только вам{% endif %}
+</p>
+{% if movie_list.description %}<p class="description">{{ movie_list.description|linebreaksbr }}</p>{% endif %}
+
+{% if is_owner %}
+  <div class="row">
+    <a class="btn ghost small" href="{% url 'list_edit' movie_list.pk %}">Изменить</a>
+    <form method="post" action="{% url 'list_delete' movie_list.pk %}">{% csrf_token %}
+      <button class="btn ghost small" type="submit">Удалить список</button>
+    </form>
+  </div>
+{% endif %}
+
+<h2>Фильмы ({{ movies|length }})</h2>
+{% if movies %}
+  <div class="grid">
+    {% for movie in movies %}
+      <div class="list-item">
+        {% include 'main/_movie_card.html' %}
+        {% if is_owner %}
+          <form method="post" action="{% url 'list_remove_movie' movie_list.pk movie.pk %}">{% csrf_token %}
+            <button class="btn ghost small" type="submit">Убрать</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="empty">В списке пока нет фильмов. Откройте страницу фильма и выберите «Добавить в список».</p>
+{% endif %}
+{% endblock %}
