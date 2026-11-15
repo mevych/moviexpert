@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Movie, Review
+from .models import Comment, Movie, Review
 
 class ReviewForm(forms.ModelForm):
     rating = forms.TypedChoiceField(
@@ -27,6 +27,20 @@ class ReviewForm(forms.ModelForm):
 
     def clean_text(self):
         return self.cleaned_data["text"].strip()
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["text"]
+        labels = {"text": "Ваш комментарий"}
+        widgets = {"text": forms.Textarea(attrs={"rows": 3, "maxlength": 2000})}
+
+    def clean_text(self):
+        text = self.cleaned_data["text"].strip()
+        if not text:
+            raise forms.ValidationError("Комментарий не может быть пустым.")
+        return text
 
 
 class MovieForm(forms.ModelForm):

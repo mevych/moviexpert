@@ -1,0 +1,45 @@
+{% extends 'main/base.html' %}
+{% block title %}Обзор на «{{ review.movie.title }}» — Moviexpert{% endblock %}
+{% block content %}
+<p class="back"><a href="{{ review.movie.get_absolute_url }}">К фильму «{{ review.movie.title }}»</a></p>
+<h1>Обзор от {{ review.user.username }}</h1>
+
+<div class="reviews">
+  {% include 'main/_review.html' with show_movie=True %}
+</div>
+
+<section id="comments">
+  <h2>Комментарии{% if comments %} ({{ comments|length }}){% endif %}</h2>
+  <div class="reviews">
+    {% for comment in comments %}
+      <article class="review comment">
+        <header>
+          <strong>{{ comment.user.username }}</strong>
+          <span class="muted">{{ comment.created_at|date:"j E Y, H:i" }}</span>
+        </header>
+        <p>{{ comment.text|linebreaksbr }}</p>
+        {% if user.pk == comment.user_id or user.is_staff %}
+          <form method="post" action="{% url 'comment_delete' comment.pk %}" class="inline-form">{% csrf_token %}
+            <button type="submit" class="btn ghost small">Удалить</button>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="empty">Комментариев пока нет.</p>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}
+    <form method="post" action="{% url 'comment_create' review.pk %}" class="form">{% csrf_token %}
+      <div class="field">
+        <label for="{{ comment_form.text.id_for_label }}">Ваш комментарий</label>
+        {{ comment_form.text }}
+        {{ comment_form.text.errors }}
+      </div>
+      <button class="btn" type="submit">Отправить</button>
+    </form>
+  {% else %}
+    <p><a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы оставить комментарий.</p>
+  {% endif %}
+</section>
+{% endblock %}

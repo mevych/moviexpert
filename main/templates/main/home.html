@@ -24,4 +24,13 @@
     <p class="empty">В каталоге пока нет фильмов. {% if user.is_authenticated %}<a href="{% url 'movie_create' %}">Добавьте первый.</a>{% endif %}</p>
   {% endif %}
 </section>
+
+{% if recent_reviews %}
+<section>
+  <h2>Свежие обзоры</h2>
+  <div class="reviews">
+    {% for review in recent_reviews %}{% include 'main/_review.html' with show_movie=True short=True %}{% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endblock %}

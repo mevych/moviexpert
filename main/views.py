@@ -1,13 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import MovieForm, RegisterForm, ReviewForm
-from .models import Genre, Movie, Review, UserMovie
+from .forms import CommentForm, MovieForm, RegisterForm, ReviewForm
+from .models import Comment, Genre, Movie, Review, ReviewLike, UserMovie
 
 SORT_FIELDS = {
     "new": "created_at",
@@ -51,6 +53,20 @@ def reviews_qs():
     )
 
 
+def liked_ids(user, reviews):
+    if not user.is_authenticated:
+        return set()
+    ids = [r.pk for r in reviews]
+    return set(ReviewLike.objects.filter(user=user, review_id__in=ids).values_list("review_id", flat=True))
+
+
+def safe_next(request, default):
+    target = request.POST.get("next", "")
+    if target and url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
+        return target
+    return default
+
+
 def mark_watched(user, movie):
     state, _ = UserMovie.objects.get_or_create(user=user, movie=movie)
     if not state.is_watched:
@@ -61,10 +77,13 @@ def mark_watched(user, movie):
 
 def home(request):
     movies = catalog()
+    recent_reviews = list(reviews_qs().exclude(text="")[:6])
     return render(request, "main/home.html", {
         "top": movies.filter(reviews_count__gt=0).order_by(
             F("avg_rating").desc(nulls_last=True), "-reviews_count")[:6],
         "latest": movies.order_by("-created_at")[:6],
+        "recent_reviews": recent_reviews,
+        "liked": liked_ids(request.user, recent_reviews),
         "movies_total": Movie.objects.count(),
     })
 
@@ -116,6 +135,7 @@ def _detail_context(request, movie, form=None):
         "my_review": my_review,
         "form": form,
         "reviews": reviews,
+        "liked": liked_ids(request.user, reviews),
     }
 
 
@@ -162,6 +182,57 @@ def review_delete(request, pk):
     review.delete()
     messages.success(request, "Обзор удалён.")
     return redirect(movie)
+
+
+def review_detail(request, pk, comment_form=None):
+    review = get_object_or_404(reviews_qs(), pk=pk)
+    return render(request, "main/review_detail.html", {
+        "review": review,
+        "comments": review.comments.select_related("user"),
+        "comment_form": comment_form or CommentForm(),
+        "liked": liked_ids(request.user, [review]),
+    })
+
+
+@login_required
+@require_POST
+def review_like(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    if review.user_id == request.user.pk:
+        messages.error(request, "Нельзя лайкать собственный обзор.")
+    else:
+        like, created = ReviewLike.objects.get_or_create(user=request.user, review=review)
+        if not created:
+            like.delete()
+    return redirect(safe_next(request, review.get_absolute_url()))
+
+
+@login_required
+@require_POST
+def comment_create(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    form = CommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.review = review
+        comment.user = request.user
+        comment.save()
+        messages.success(request, "Комментарий опубликован.")
+    else:
+        return review_detail(request, pk, comment_form=form)
+    return redirect(review)
+
+
+@login_required
+@require_POST
+def comment_delete(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    if comment.user_id != request.user.pk and not request.user.is_staff:
+        raise PermissionDenied
+    review = comment.review
+    comment.delete()
+    messages.success(request, "Комментарий удалён.")
+    return redirect(review)
 
 
 def register(request):
