@@ -6,6 +6,7 @@ urlpatterns = [
     path("", views.home, name="home"),
 
     path("movies/", views.movie_list, name="movie_list"),
+    path("case/", views.case_page, name="case"),
     path("movies/add/", views.movie_create, name="movie_create"),
     path("movies/import/", views.tmdb_search, name="tmdb_search"),
     path("movies/import/run/", views.tmdb_import, name="tmdb_import"),

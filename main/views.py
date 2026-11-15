@@ -7,9 +7,10 @@ from django.db.models import Avg, Count, F, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
-from . import services
+from . import cases, services
 from .forms import (
     CommentForm, MovieForm, MovieListForm, RegisterForm, ReviewForm,
 )
@@ -143,6 +144,26 @@ def movie_list(request):
         "sort": sort,
         "direction": direction,
         "querystring": params.urlencode(),
+    })
+
+
+@never_cache
+def case_page(request):
+    drop = cases.open_case()
+    if drop is None:
+        return render(request, "main/case.html", {"empty": True})
+    movies = Movie.objects.in_bulk({pk for pk, _ in drop["strip"]})
+    strip = []
+    for pk, tier in drop["strip"]:
+        movie = movies[pk]
+        movie.tier = tier
+        strip.append(movie)
+    return render(request, "main/case.html", {
+        "strip": strip,
+        "winner": movies[drop["winner"]],
+        "tier": cases.TIER_BY_KEY[drop["tier"]],
+        "win_index": cases.WIN_INDEX,
+        "stop": cases.stop_distance(drop["offset"]),
     })
 
 

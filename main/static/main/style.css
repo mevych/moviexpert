@@ -200,3 +200,52 @@ label { font-size: .9rem; color: var(--muted); }
 code { background: var(--bg); padding: .05rem .35rem; border-radius: 4px; }
 
 .filters .btn { align-self: flex-end; }
+.nav a.nav-random { color: var(--warm); font-weight: 600; }
+
+.tier-milspec { --tier: #4b69ff; }
+.tier-restricted { --tier: #8847ff; }
+.tier-classified { --tier: #d32ce6; }
+.tier-covert { --tier: #eb4b4b; }
+.tier-gold { --tier: #ffd700; }
+
+.reel {
+  position: relative; overflow: hidden; margin: 1.5rem 0; padding: 1.5rem 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.reel-marker {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1.5px;
+  background: var(--warm); box-shadow: 0 0 14px var(--warm); z-index: 2;
+}
+.reel-strip {
+  display: flex; width: max-content; margin-left: 50%;
+  animation: reel-spin 6s cubic-bezier(.1, .7, .1, 1) forwards;
+}
+@keyframes reel-spin {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--stop)); }
+}
+.reel-card {
+  flex: 0 0 150px; width: 150px; min-width: 0; overflow: hidden; margin-right: 10px; padding-bottom: .3rem; border-radius: 8px;
+  background: var(--surface-2); border-bottom: 4px solid var(--tier);
+}
+.reel-card .poster { border-radius: 8px 8px 0 0; }
+.reel-name { display: block; padding: .35rem .5rem 0; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reel-card.winner { animation: win-glow 1s ease 6s forwards; }
+@keyframes win-glow { to { box-shadow: 0 0 26px var(--tier); transform: translateY(-4px); } }
+
+.drop {
+  opacity: 0; transform: translateY(14px); animation: drop-in .7s ease 6.4s forwards;
+  background: var(--surface); border: 1px solid var(--tier); border-left-width: 6px;
+  border-radius: 8px; padding: 1rem 1.5rem 1.5rem; max-width: 46rem; box-shadow: 0 0 22px -8px var(--tier);
+}
+.drop h2 { margin-top: .25rem; }
+.drop-tier { margin: 0; color: var(--tier); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .85rem; }
+@keyframes drop-in { to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-strip { animation: none; transform: translateX(var(--stop)); }
+  .reel-card.winner { animation: none; box-shadow: 0 0 26px var(--tier); transform: translateY(-4px); }
+  .drop { animation: none; opacity: 1; transform: none; }
+}

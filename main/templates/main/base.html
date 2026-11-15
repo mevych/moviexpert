@@ -13,6 +13,7 @@
     <nav class="nav">
       <a href="{% url 'movie_list' %}">Каталог</a>
       <a href="{% url 'list_index' %}">Списки</a>
+      <a class="nav-random" href="{% url 'case' %}">Случайный фильм</a>
       {% if user.is_authenticated %}
         <a href="{% url 'tmdb_search' %}">Добавить фильм</a>
         <a href="{% url 'profile' user.username %}">Мой профиль</a>

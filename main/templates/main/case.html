@@ -1,0 +1,38 @@
+{% extends 'main/base.html' %}
+{% block title %}Случайный фильм — Moviexpert{% endblock %}
+{% block content %}
+<h1>Случайный фильм</h1>
+
+{% if empty %}
+  <p class="empty">В каталоге пока нет фильмов.</p>
+{% else %}
+<div class="reel" style="--stop: -{{ stop }}px">
+  <div class="reel-marker"></div>
+  <div class="reel-strip">
+    {% for movie in strip %}
+      <div class="reel-card tier-{{ movie.tier }}{% if forloop.counter0 == win_index %} winner{% endif %}">
+        <div class="poster" style="--h: {{ movie.hue }}">
+          {% if movie.poster_src %}
+            <img src="{{ movie.poster_src }}" alt="">
+          {% else %}
+            <span class="poster-title">{{ movie.title }}</span>
+            <span class="poster-year">{{ movie.year }}</span>
+          {% endif %}
+        </div>
+        <span class="reel-name">{{ movie.title }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<section class="drop tier-{{ tier.key }}">
+  <p class="drop-tier">{{ tier.label }}</p>
+  <h2>{{ winner.title }} ({{ winner.year }})</h2>
+  {% if winner.description %}<p class="description">{{ winner.description|truncatechars:260 }}</p>{% endif %}
+  <div class="row">
+    <a class="btn" href="{{ winner.get_absolute_url }}">Открыть фильм</a>
+    <a class="btn ghost" href="{% url 'case' %}">Крутить ещё раз</a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
