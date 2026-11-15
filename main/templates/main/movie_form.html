@@ -1,0 +1,18 @@
+{% extends 'main/base.html' %}
+{% block title %}Добавить фильм — Moviexpert{% endblock %}
+{% block content %}
+<h1>Добавить фильм вручную</h1>
+<p class="muted">Загрузите файл постера или укажите ссылку.</p>
+<form method="post" class="form" enctype="multipart/form-data">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <div class="field">
+      {{ field.label_tag }}
+      {{ field }}
+      {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <button class="btn" type="submit">Добавить в каталог</button>
+</form>
+{% endblock %}

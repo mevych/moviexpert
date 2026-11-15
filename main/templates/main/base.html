@@ -12,6 +12,9 @@
     <a class="logo" href="{% url 'home' %}">Moviexpert</a>
     <nav class="nav">
       <a href="{% url 'movie_list' %}">Каталог</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'movie_create' %}">Добавить фильм</a>
+      {% endif %}
     </nav>
     <form class="search" action="{% url 'movie_list' %}" method="get" role="search">
       <input type="search" name="q" placeholder="Название или режиссёр" value="{{ request.GET.q }}" aria-label="Поиск фильмов">

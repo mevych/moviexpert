@@ -21,7 +21,7 @@
   {% if latest %}
     <div class="grid">{% for movie in latest %}{% include 'main/_movie_card.html' %}{% endfor %}</div>
   {% else %}
-    <p class="empty">В каталоге пока нет фильмов.</p>
+    <p class="empty">В каталоге пока нет фильмов. {% if user.is_authenticated %}<a href="{% url 'movie_create' %}">Добавьте первый.</a>{% endif %}</p>
   {% endif %}
 </section>
 {% endblock %}

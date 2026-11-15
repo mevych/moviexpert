@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import RegisterForm
+from .forms import MovieForm, RegisterForm
 from .models import Genre, Movie
 
 SORT_FIELDS = {
@@ -90,6 +91,19 @@ def movie_list(request):
 def movie_detail(request, pk):
     movie = get_object_or_404(catalog(), pk=pk)
     return render(request, "main/movie_detail.html", {"movie": movie})
+
+
+@login_required
+def movie_create(request):
+    form = MovieForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        movie = form.save(commit=False)
+        movie.added_by = request.user
+        movie.save()
+        form.save_m2m()
+        messages.success(request, "Фильм добавлен в каталог.")
+        return redirect(movie)
+    return render(request, "main/movie_form.html", {"form": form})
 
 
 def register(request):
