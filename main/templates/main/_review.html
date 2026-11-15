@@ -3,11 +3,11 @@
     {% if show_movie %}
       <a href="{% url 'movie_detail' review.movie.pk %}"><strong>{{ review.movie.title }}</strong></a>
     {% else %}
-      <strong>{{ review.user.username }}</strong>
+      <a href="{% url 'profile' review.user.username %}"><strong>{{ review.user.username }}</strong></a>
     {% endif %}
     <span class="badge">{{ review.rating }}/10</span>
     <span class="muted">
-      {% if show_movie %}{{ review.user.username }}, {% endif %}{{ review.created_at|date:"j E Y" }}
+      {% if show_movie %}<a href="{% url 'profile' review.user.username %}">{{ review.user.username }}</a>, {% endif %}{{ review.created_at|date:"j E Y" }}
     </span>
   </header>
   {% if review.text %}

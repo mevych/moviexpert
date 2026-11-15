@@ -1,0 +1,28 @@
+{% extends 'main/base.html' %}
+{% block title %}{{ owner.username }} — Moviexpert{% endblock %}
+{% block content %}
+<h1>{{ owner.username }}</h1>
+<p class="muted">На сайте с {{ owner.date_joined|date:"j E Y" }}</p>
+
+<nav class="tabs" aria-label="Разделы профиля">
+  {% for key, label, count in tabs %}
+    <a href="?tab={{ key }}" class="{% if key == tab %}active{% endif %}">{{ label }} <small>{{ count }}</small></a>
+  {% endfor %}
+</nav>
+
+{% if tab == 'reviews' %}
+  <div class="reviews">
+    {% for review in reviews %}
+      {% include 'main/_review.html' with show_movie=True %}
+    {% empty %}
+      <p class="empty">Обзоров пока нет.</p>
+    {% endfor %}
+  </div>
+{% else %}
+  {% if movies %}
+    <div class="grid">{% for movie in movies %}{% include 'main/_movie_card.html' %}{% endfor %}</div>
+  {% else %}
+    <p class="empty">Здесь пока пусто. Откройте <a href="{% url 'movie_list' %}">каталог</a> и добавьте фильмы.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

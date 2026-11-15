@@ -14,7 +14,7 @@
     {% for comment in comments %}
       <article class="review comment">
         <header>
-          <strong>{{ comment.user.username }}</strong>
+          <a href="{% url 'profile' comment.user.username %}"><strong>{{ comment.user.username }}</strong></a>
           <span class="muted">{{ comment.created_at|date:"j E Y, H:i" }}</span>
         </header>
         <p>{{ comment.text|linebreaksbr }}</p>

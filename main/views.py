@@ -1,15 +1,24 @@
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, MovieForm, RegisterForm, ReviewForm
 from .models import Comment, Genre, Movie, Review, ReviewLike, UserMovie
+
+User = get_user_model()
+
+STATE_FIELDS = {
+    "favorite": "is_favorite",
+    "watchlist": "in_watchlist",
+    "watched": "is_watched",
+}
 
 SORT_FIELDS = {
     "new": "created_at",
@@ -23,6 +32,13 @@ DEFAULT_DIRECTION = {
     "year": "desc",
     "rating": "desc",
     "title": "asc",
+}
+
+PROFILE_TABS = {
+    "favorites": ("Избранное", "is_favorite"),
+    "watchlist": ("Смотреть позже", "in_watchlist"),
+    "watched": ("Просмотрено", "is_watched"),
+    "reviews": ("Обзоры", None),
 }
 
 
@@ -124,14 +140,16 @@ def movie_list(request):
 
 
 def _detail_context(request, movie, form=None):
-    my_review = None
+    state = my_review = None
     if request.user.is_authenticated:
+        state = UserMovie.objects.filter(user=request.user, movie=movie).first()
         my_review = Review.objects.filter(user=request.user, movie=movie).first()
     if form is None:
         form = ReviewForm(instance=my_review)
     reviews = list(reviews_qs().filter(movie=movie))
     return {
         "movie": movie,
+        "state": state,
         "my_review": my_review,
         "form": form,
         "reviews": reviews,
@@ -155,6 +173,22 @@ def movie_create(request):
         messages.success(request, "Фильм добавлен в каталог.")
         return redirect(movie)
     return render(request, "main/movie_form.html", {"form": form})
+
+
+@login_required
+@require_POST
+def toggle_state(request, pk, action):
+    field = STATE_FIELDS.get(action)
+    if field is None:
+        raise Http404
+    movie = get_object_or_404(Movie, pk=pk)
+    state, _ = UserMovie.objects.get_or_create(user=request.user, movie=movie)
+    new_value = not getattr(state, field)
+    setattr(state, field, new_value)
+    if field == "is_watched" and new_value:
+        state.in_watchlist = False
+    state.save()
+    return redirect(safe_next(request, movie.get_absolute_url()))
 
 
 @login_required
@@ -233,6 +267,45 @@ def comment_delete(request, pk):
     comment.delete()
     messages.success(request, "Комментарий удалён.")
     return redirect(review)
+
+
+def profile(request, username):
+    owner = get_object_or_404(User, username=username)
+    is_self = request.user.is_authenticated and request.user.pk == owner.pk
+    tab = request.GET.get("tab", "favorites")
+    if tab not in PROFILE_TABS:
+        tab = "favorites"
+
+    counts = {}
+    for key, (_, field) in PROFILE_TABS.items():
+        if field:
+            counts[key] = UserMovie.objects.filter(user=owner, **{field: True}).count()
+        else:
+            counts[key] = Review.objects.filter(user=owner).count()
+
+    movies = reviews = None
+    liked = set()
+    field = PROFILE_TABS[tab][1]
+    if field:
+        ids = list(
+            UserMovie.objects.filter(user=owner, **{field: True})
+            .order_by("-updated_at").values_list("movie_id", flat=True)
+        )
+        by_id = {m.pk: m for m in catalog().filter(pk__in=ids)}
+        movies = [by_id[i] for i in ids if i in by_id]
+    else:
+        reviews = list(reviews_qs().filter(user=owner))
+        liked = liked_ids(request.user, reviews)
+
+    return render(request, "main/profile.html", {
+        "owner": owner,
+        "is_self": is_self,
+        "tab": tab,
+        "tabs": [(key, label, counts[key]) for key, (label, _) in PROFILE_TABS.items()],
+        "movies": movies,
+        "reviews": reviews,
+        "liked": liked,
+    })
 
 
 def register(request):
