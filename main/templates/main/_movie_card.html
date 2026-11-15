@@ -5,6 +5,7 @@
     <p class="muted">{{ movie.year }}{% if movie.director %}, {{ movie.director }}{% endif %}</p>
     <p class="scores">
       {% if movie.avg_rating %}<span class="score">{{ movie.avg_rating|floatformat:1 }}</span>{% endif %}
+      {% if movie.tmdb_rating %}<span class="tmdb-score" title="Оценка TMDB">TMDB {{ movie.tmdb_rating|floatformat:1 }}</span>{% endif %}
     </p>
   </div>
 </a>

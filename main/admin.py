@@ -14,7 +14,7 @@ class MovieAdmin(admin.ModelAdmin):
     list_filter = ["genres", "year"]
     search_fields = ["title", "original_title", "director"]
     filter_horizontal = ["genres"]
-    readonly_fields = ["tmdb_id", "tmdb_votes"]
+    readonly_fields = ["tmdb_id", "tmdb_votes", "tmdb_rating"]
 
 
 class ReviewCommentInline(admin.TabularInline):

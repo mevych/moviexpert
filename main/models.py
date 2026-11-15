@@ -28,6 +28,7 @@ class Movie(models.Model):
 
     tmdb_id = models.PositiveIntegerField(null=True, blank=True, unique=True, editable=False)
     tmdb_votes = models.PositiveIntegerField("Голосов на TMDB", default=0, editable=False)
+    tmdb_rating = models.FloatField("Оценка TMDB", default=0, editable=False)
 
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,

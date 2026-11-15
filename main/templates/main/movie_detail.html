@@ -23,6 +23,9 @@
         <span class="muted">Оценок пока нет</span>
       {% endif %}
     </p>
+    {% if movie.tmdb_rating %}
+      <p class="muted">Оценка TMDB: <strong>{{ movie.tmdb_rating|floatformat:1 }}</strong> из 10, голосов: {{ movie.tmdb_votes }}</p>
+    {% endif %}
 
     {% if movie.description %}<p class="description">{{ movie.description|linebreaksbr }}</p>{% endif %}
 

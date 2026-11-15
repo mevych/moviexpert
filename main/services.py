@@ -95,6 +95,7 @@ def import_from_tmdb(tmdb_id, user=None):
         movie = Movie(title=title, year=year, added_by=user)
     movie.tmdb_id = tmdb_id
     movie.tmdb_votes = data.get("vote_count") or 0
+    movie.tmdb_rating = round(data.get("vote_average") or 0, 1)
     movie.original_title = movie.original_title or (original if original != title else "")
     movie.director = movie.director or director
     movie.duration = movie.duration or data.get("runtime") or None

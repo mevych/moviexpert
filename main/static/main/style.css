@@ -149,6 +149,7 @@ label { font-size: .9rem; color: var(--muted); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
+.tmdb-score { color: var(--muted); font-size: .85rem; }
 .scores { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
 
 .list-add { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .75rem; align-items: center; }

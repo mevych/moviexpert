@@ -34,9 +34,11 @@ class Command(BaseCommand):
                     self.stderr.write(f"  ! {item.get('title')}: {exc}")
                     continue
                 votes = item.get("vote_count") or 0
-                if movie.tmdb_votes != votes:
+                rating = round(item.get("vote_average") or 0, 1)
+                if movie.tmdb_votes != votes or movie.tmdb_rating != rating:
                     movie.tmdb_votes = votes
-                    movie.save(update_fields=["tmdb_votes"])
+                    movie.tmdb_rating = rating
+                    movie.save(update_fields=["tmdb_votes", "tmdb_rating"])
                 if was_created:
                     created += 1
                     self.stdout.write(f"  + {movie}")
