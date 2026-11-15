@@ -28,6 +28,10 @@ urlpatterns = [
     path("lists/<int:pk>/delete/", views.list_delete, name="list_delete"),
     path("lists/<int:pk>/remove/<int:movie_pk>/", views.list_remove_movie, name="list_remove_movie"),
 
+    path("team/", views.team, name="team"),
+    path("support/", views.support, name="support"),
+    path("support/thanks/", views.support_thanks, name="support_thanks"),
+
     path("u/<str:username>/", views.profile, name="profile"),
     path("accounts/register/", views.register, name="register"),
 ]

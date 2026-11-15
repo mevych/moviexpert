@@ -1,0 +1,10 @@
+{% extends 'main/base.html' %}
+{% block title %}Спасибо — Moviexpert{% endblock %}
+{% block content %}
+<h1>Спасибо за поддержку!</h1>
+<p class="lead">Если платёж прошёл, он скоро отобразится в ЮMoney. Мы очень это ценим.</p>
+<div class="row">
+  <a class="btn" href="{% url 'movie_list' %}">Вернуться в каталог</a>
+  <a class="btn ghost" href="{% url 'home' %}">На главную</a>
+</div>
+{% endblock %}

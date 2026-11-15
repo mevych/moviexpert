@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
@@ -6,17 +7,16 @@ from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from . import cases, services
-from .forms import (
-    CommentForm, MovieForm, MovieListForm, RegisterForm, ReviewForm,
-)
+from .forms import CommentForm, MovieForm, MovieListForm, RegisterForm, ReviewForm
+from .team import DEVELOPERS
 from .models import (
-    Comment, Genre, Movie, MovieList, MovieListItem, Review, ReviewLike,
-    UserMovie,
+    Comment, Genre, Movie, MovieList, MovieListItem, Review, ReviewLike, UserMovie,
 )
 
 User = get_user_model()
@@ -473,3 +473,21 @@ def register(request):
         messages.success(request, "Аккаунт создан. Добро пожаловать!")
         return redirect("home")
     return render(request, "registration/register.html", {"form": form})
+
+
+def team(request):
+    return render(request, "main/team.html", {"developers": DEVELOPERS})
+
+
+def support(request):
+    wallet = (settings.YOOMONEY_WALLET or "").strip()
+    if not (wallet.isdigit() and 11 <= len(wallet) <= 20):
+        wallet = ""
+    return render(request, "main/support.html", {
+        "wallet": wallet,
+        "success_url": request.build_absolute_uri(reverse("support_thanks")),
+    })
+
+
+def support_thanks(request):
+    return render(request, "main/support_thanks.html")

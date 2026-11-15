@@ -1,0 +1,40 @@
+{% extends 'main/base.html' %}
+{% block title %}Поддержать проект — Moviexpert{% endblock %}
+{% block content %}
+<h1>Поддержать проект</h1>
+<p class="muted lead">Если Moviexpert вам полезен, можно помочь его развитию. Донат добровольный и ни на что не влияет: все возможности сайта доступны без него.</p>
+
+<section class="donate">
+  {% if wallet %}
+    <form method="post" action="https://yoomoney.ru/quickpay/confirm" class="form">
+      <input type="hidden" name="receiver" value="{{ wallet }}">
+      <input type="hidden" name="quickpay-form" value="donate">
+      <input type="hidden" name="targets" value="Поддержка проекта Moviexpert">
+      <input type="hidden" name="short-dest" value="Поддержка проекта Moviexpert">
+      <input type="hidden" name="formcomment" value="Поддержка проекта Moviexpert">
+      <input type="hidden" name="successURL" value="{{ success_url }}">
+
+      <div class="field">
+        <label for="donate-sum">Сумма, ₽</label>
+        <input id="donate-sum" type="number" name="sum" value="300" min="10" max="100000" step="1" required>
+      </div>
+
+      <fieldset class="pay-type">
+        <legend>Способ оплаты</legend>
+        <label><input type="radio" name="paymentType" value="PC" checked> Кошелёк ЮMoney</label>
+        <label><input type="radio" name="paymentType" value="AC"> Банковская карта</label>
+      </fieldset>
+
+      <button class="btn" type="submit">Перейти к оплате в ЮMoney</button>
+      <p class="muted small-note">Оплата проходит на стороне ЮMoney, мы не получаем и не храним данные вашей карты. Комиссию сервиса удерживает ЮMoney.</p>
+    </form>
+  {% else %}
+    <p class="empty">Приём донатов пока не настроен. Загляните сюда позже.</p>
+    {% if user.is_staff %}
+      <p class="message">Для администратора: задайте номер кошелька в переменной окружения <code>YOOMONEY_WALLET</code> (11–20 цифр) и перезапустите сервер.</p>
+    {% endif %}
+  {% endif %}
+</section>
+
+<p>Хотите помочь иначе? Расскажите о сайте друзьям или напишите <a href="{% url 'team' %}">разработчикам</a>.</p>
+{% endblock %}

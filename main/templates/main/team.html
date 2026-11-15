@@ -1,0 +1,29 @@
+{% extends 'main/base.html' %}
+{% block title %}Разработчики — Moviexpert{% endblock %}
+{% block content %}
+<h1>Разработчики</h1>
+<p class="muted lead">Moviexpert делают люди, которые сами любят кино. Если нашли ошибку или хотите предложить идею, напишите нам.</p>
+
+<div class="team">
+  {% for dev in developers %}
+    <article class="dev">
+      <div class="dev-avatar" aria-hidden="true">{{ dev.name|slice:":1"|upper }}</div>
+      <div>
+        <h2>{{ dev.name }}</h2>
+        <p class="muted">{{ dev.role }}</p>
+        {% if dev.about %}<p>{{ dev.about }}</p>{% endif %}
+        <p class="dev-links">
+          {% if dev.github %}<a href="{{ dev.github }}" rel="noopener" target="_blank">GitHub</a>{% endif %}
+          {% if dev.contact %}<span class="muted">{{ dev.contact }}</span>{% endif %}
+        </p>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+<section class="about-stack">
+  <h2>Из чего сделан сайт</h2>
+  <p>Backend на Django и SQLite, интерфейс собран на обычных шаблонах и CSS без JavaScript. Описания и постеры для импортированных фильмов берутся из TMDB.</p>
+  <p>Нравится проект? <a href="{% url 'support' %}">Поддержите его развитие</a>.</p>
+</section>
+{% endblock %}
