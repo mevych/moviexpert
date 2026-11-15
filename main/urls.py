@@ -7,6 +7,8 @@ urlpatterns = [
 
     path("movies/", views.movie_list, name="movie_list"),
     path("movies/add/", views.movie_create, name="movie_create"),
+    path("movies/import/", views.tmdb_search, name="tmdb_search"),
+    path("movies/import/run/", views.tmdb_import, name="tmdb_import"),
     path("movies/<int:pk>/", views.movie_detail, name="movie_detail"),
     path("movies/<int:pk>/mark/<str:action>/", views.toggle_state, name="toggle_state"),
     path("movies/<int:pk>/review/", views.review_save, name="review_save"),

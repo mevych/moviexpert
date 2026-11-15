@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from . import services
 from .forms import (
     CommentForm, MovieForm, MovieListForm, RegisterForm, ReviewForm,
 )
@@ -199,6 +200,40 @@ def toggle_state(request, pk, action):
         state.in_watchlist = False
     state.save()
     return redirect(safe_next(request, movie.get_absolute_url()))
+
+
+@login_required
+def tmdb_search(request):
+    q = request.GET.get("q", "").strip()
+    results, error = [], None
+    if q:
+        try:
+            results = services.tmdb_search(q)
+        except services.ServiceError as exc:
+            error = str(exc)
+        known = set(
+            Movie.objects.filter(tmdb_id__in=[r["tmdb_id"] for r in results])
+            .values_list("tmdb_id", flat=True)
+        )
+        for r in results:
+            r["imported"] = r["tmdb_id"] in known
+    return render(request, "main/tmdb_search.html", {"q": q, "results": results, "error": error})
+
+
+@login_required
+@require_POST
+def tmdb_import(request):
+    tmdb_id = request.POST.get("tmdb_id", "")
+    if not tmdb_id.isdigit():
+        messages.error(request, "Не удалось определить фильм для импорта.")
+        return redirect("tmdb_search")
+    try:
+        movie, created = services.import_from_tmdb(int(tmdb_id), request.user)
+    except services.ServiceError as exc:
+        messages.error(request, str(exc))
+        return redirect("tmdb_search")
+    messages.success(request, "Фильм импортирован." if created else "Этот фильм уже есть в каталоге.")
+    return redirect(movie)
 
 
 @login_required

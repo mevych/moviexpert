@@ -1,0 +1,42 @@
+{% extends 'main/base.html' %}
+{% block title %}Импорт из TMDB — Moviexpert{% endblock %}
+{% block content %}
+<h1>Добавить фильм</h1>
+<p class="muted">Найдите фильм в базе TMDB, и мы подтянем описание, постер, жанры и режиссёра. Не нашли? <a href="{% url 'movie_create' %}">Добавьте вручную</a>.</p>
+
+<form class="search-big" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Название фильма" aria-label="Название фильма" required>
+  <button class="btn" type="submit">Искать в TMDB</button>
+</form>
+
+{% if error %}<p class="message error">{{ error }}</p>{% endif %}
+
+{% if q and not error %}
+  {% if results %}
+    <div class="tmdb-results">
+      {% for r in results %}
+        <article class="tmdb-row">
+          <div class="tmdb-poster">
+            {% if r.poster_url %}<img src="{{ r.poster_url }}" alt="" loading="lazy">{% endif %}
+          </div>
+          <div>
+            <h3>{{ r.title }}{% if r.year %} ({{ r.year }}){% endif %}</h3>
+            {% if r.original_title and r.original_title != r.title %}<p class="muted">{{ r.original_title }}</p>{% endif %}
+            {% if r.overview %}<p>{{ r.overview|truncatewords:35 }}</p>{% endif %}
+            {% if r.imported %}
+              <p class="muted">Уже в каталоге</p>
+            {% else %}
+              <form method="post" action="{% url 'tmdb_import' %}">{% csrf_token %}
+                <input type="hidden" name="tmdb_id" value="{{ r.tmdb_id }}">
+                <button class="btn small" type="submit">Импортировать</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">По запросу «{{ q }}» ничего не нашлось.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
