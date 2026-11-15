@@ -1,0 +1,16 @@
+<article class="review" id="review-{{ review.pk }}">
+  <header>
+    {% if show_movie %}
+      <a href="{% url 'movie_detail' review.movie.pk %}"><strong>{{ review.movie.title }}</strong></a>
+    {% else %}
+      <strong>{{ review.user.username }}</strong>
+    {% endif %}
+    <span class="badge">{{ review.rating }}/10</span>
+    <span class="muted">
+      {% if show_movie %}{{ review.user.username }}, {% endif %}{{ review.created_at|date:"j E Y" }}
+    </span>
+  </header>
+  {% if review.text %}
+    <p>{% if short %}{{ review.text|truncatewords:40 }}{% else %}{{ review.text|linebreaksbr }}{% endif %}</p>
+  {% endif %}
+</article>

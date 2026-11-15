@@ -2,7 +2,32 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Movie
+from .models import Movie, Review
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.TypedChoiceField(
+        label="Оценка",
+        choices=[(i, str(i)) for i in range(1, 11)],
+        coerce=int,
+        widget=forms.RadioSelect,
+        error_messages={"required": "Выберите оценку от 1 до 10."},
+    )
+
+    class Meta:
+        model = Review
+        fields = ["rating", "text"]
+        labels = {"text": "Обзор"}
+        widgets = {
+            "text": forms.Textarea(attrs={
+                "rows": 5,
+                "placeholder": "Что вы думаете о фильме? Можно оставить только оценку.",
+                "maxlength": 5000,
+            }),
+        }
+
+    def clean_text(self):
+        return self.cleaned_data["text"].strip()
+
 
 class MovieForm(forms.ModelForm):
     class Meta:

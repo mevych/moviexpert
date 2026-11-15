@@ -27,4 +27,43 @@
     {% if movie.description %}<p class="description">{{ movie.description|linebreaksbr }}</p>{% endif %}
   </div>
 </article>
+
+{% if user.is_authenticated %}
+<section class="review-form">
+  <h2>{% if my_review %}Ваш обзор{% else %}Оставить оценку и обзор{% endif %}</h2>
+  <form method="post" action="{% url 'review_save' movie.pk %}">{% csrf_token %}
+    <fieldset class="rating-picker">
+      <legend>Оценка от 1 до 10</legend>
+      <div class="pills">
+        {% for radio in form.rating %}
+          {{ radio.tag }}<label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+        {% endfor %}
+      </div>
+      {{ form.rating.errors }}
+    </fieldset>
+    <div class="field">
+      <label for="{{ form.text.id_for_label }}">Обзор</label>
+      {{ form.text }}
+      {{ form.text.errors }}
+    </div>
+    <button class="btn" type="submit">{% if my_review %}Сохранить изменения{% else %}Опубликовать{% endif %}</button>
+  </form>
+  {% if my_review %}
+    <form method="post" action="{% url 'review_delete' my_review.pk %}" class="inline-form">{% csrf_token %}
+      <button class="btn ghost small" type="submit">Удалить обзор</button>
+    </form>
+  {% endif %}
+</section>
+{% endif %}
+
+<section>
+  <h2>Обзоры{% if movie.reviews_count %} ({{ movie.reviews_count }}){% endif %}</h2>
+  <div class="reviews">
+    {% for review in reviews %}
+      {% include 'main/_review.html' %}
+    {% empty %}
+      <p class="empty">Пока никто не оставил обзор. Будьте первым.</p>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}
